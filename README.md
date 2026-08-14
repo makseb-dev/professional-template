@@ -32,3 +32,16 @@ app's `.env.local` overrides it.
   `PATCH /agency/sections/:templateSectionId`
 
 Admin demo: `hello@professionaltraveling.com` / `StrongPass123`.
+
+## Hosted admin
+
+Live site: https://professional-template-dun.vercel.app
+
+Admin paths (client-side routes, SPA fallback via `vercel.json`):
+
+- `/admin/login` — sign in
+- `/admin` — overview
+- `/admin/website-sections` — sections manager (reorder, toggle, live preview)
+- `/admin/offers` — offers quick edit
+- `/admin/sections/:templateSectionId` — section editor
+- `/preview` — live preview window (updates while editing)
