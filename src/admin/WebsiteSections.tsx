@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowDown,
   ArrowUp,
+  ExternalLink,
   GripVertical,
   Lock,
   RefreshCw,
@@ -14,7 +15,10 @@ import {
   reorderSections,
   resetSectionsOrder,
 } from '../api/agency';
-import type { AdminSection } from '../types';
+import type { AdminSection, SectionEntry } from '../types';
+import { SitePreview } from './SitePreview';
+
+const PREVIEW_KEY = 'websitePreviewDraft';
 
 function sameOrder(
   a: AdminSection[],
@@ -65,6 +69,30 @@ export function WebsiteSections() {
     [original, items],
   );
 
+  const entries = useMemo<SectionEntry[]>(
+    () =>
+      items.map((s, i) => ({
+        sectionKey: s.sectionKey,
+        displayName: s.displayName,
+        isFixed: s.isFixed,
+        sortOrder: i,
+        content: s.content ?? {},
+        isEnabled: s.isEnabled,
+      })),
+    [items],
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        PREVIEW_KEY,
+        JSON.stringify({ sections: entries }),
+      );
+    } catch {
+      /* storage unavailable */
+    }
+  }, [entries]);
+
   useEffect(() => {
     if (!dirty) return;
     const handler = (e: BeforeUnloadEvent) => {
@@ -76,17 +104,20 @@ export function WebsiteSections() {
   }, [dirty]);
 
   const save = async () => {
+    const editable = items.filter((s) => !s.isFixed);
     setSaving(true);
     setError(null);
     setSaved(false);
     try {
-      const updated = await reorderSections(
-        items.map((s, i) => ({
-          templateSectionId: s.templateSectionId,
-          sortOrder: i,
-          isEnabled: s.isEnabled,
-        })),
-      );
+      const updated = editable.length
+        ? await reorderSections(
+            editable.map((s, i) => ({
+              templateSectionId: s.templateSectionId,
+              sortOrder: i,
+              isEnabled: s.isEnabled,
+            })),
+          )
+        : items;
       const sorted = [...updated].sort((a, b) => a.sortOrder - b.sortOrder);
       setOriginal(sorted);
       setItems(sorted);
@@ -175,6 +206,10 @@ export function WebsiteSections() {
     setSaved(false);
   };
 
+  const openPreview = () => {
+    window.open('/preview', '_blank', 'noopener');
+  };
+
   if (loading) {
     return (
       <div className="admin-splash" aria-busy="true">
@@ -199,6 +234,9 @@ export function WebsiteSections() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <button type="button" className="btn btn-secondary" onClick={openPreview}>
+            <ExternalLink size={15} /> Preview site
+          </button>
           <button type="button" className="btn btn-secondary" onClick={resetDefault} disabled={saving}>
             <RotateCcw size={15} /> Reset defaults
           </button>
@@ -214,90 +252,98 @@ export function WebsiteSections() {
       {error && <div className="error-banner">{error}</div>}
       {saved && <div className="success-banner">Section order saved and published.</div>}
 
-      {items.length === 0 ? (
-        <div className="admin-card">
-          <p style={{ color: 'var(--muted-foreground)' }}>No sections found for this template.</p>
-        </div>
-      ) : (
-        <div className="admin-card ws-list" style={{ padding: '0.5rem 0' }}>
-          {items.map((s, i) => (
-            <div
-              key={s.templateSectionId}
-              className={`ws-row${s.isFixed ? ' is-fixed' : ''}${s.isEnabled === false ? ' is-disabled' : ''}`}
-              draggable={!s.isFixed}
-              onDragStart={() => onDragStart(i)}
-              onDragOver={onDragOver}
-              onDrop={() => onDrop(i)}
-              onDragEnd={() => { dragIndex.current = null; }}
-            >
-              <span className="ws-grip" title={s.isFixed ? 'Fixed sections cannot be moved' : 'Drag to reorder'}>
-                {s.isFixed ? <Lock size={15} /> : <GripVertical size={16} />}
-              </span>
-
-              <div className="ws-main">
-                <Link to={`/admin/sections/${s.templateSectionId}`} className="ws-name">
-                  {s.displayName || s.sectionKey}
-                </Link>
-                <span className="ws-key">{s.sectionKey}</span>
-                {s.isFixed && <span className="ws-badge">Fixed</span>}
-                {s.isEnabled === false && <span className="ws-badge is-off">Hidden</span>}
-              </div>
-
-              <div className="ws-position">
-                <button
-                  type="button"
-                  className="icon-btn"
-                  onClick={() => move(i, -1)}
-                  disabled={s.isFixed || i === 0}
-                  title="Move up"
-                  aria-label="Move up"
-                >
-                  <ArrowUp size={14} />
-                </button>
-                <input
-                  type="number"
-                  min={0}
-                  value={s.sortOrder}
-                  disabled={s.isFixed}
-                  onChange={(e) => setPosition(i, e.target.value)}
-                  className="ws-order-input"
-                  aria-label="Position"
-                />
-                <button
-                  type="button"
-                  className="icon-btn"
-                  onClick={() => move(i, 1)}
-                  disabled={s.isFixed || i === items.length - 1}
-                  title="Move down"
-                  aria-label="Move down"
-                >
-                  <ArrowDown size={14} />
-                </button>
-              </div>
-
-              <button
-                type="button"
-                className={`ws-toggle${s.isEnabled !== false ? ' is-on' : ''}`}
-                onClick={() => toggleEnabled(i)}
-                disabled={s.isFixed}
-                title={s.isFixed ? 'Fixed sections cannot be disabled' : s.isEnabled === false ? 'Enable section' : 'Disable section'}
-                aria-pressed={s.isEnabled !== false}
-              >
-                <span className="ws-toggle-track"><span className="ws-toggle-thumb" /></span>
-                <span className="ws-toggle-label">
-                  {s.isEnabled === false ? 'Off' : 'On'}
-                </span>
-              </button>
+      <div className="ws-grid">
+        <div className="ws-list-col">
+          {items.length === 0 ? (
+            <div className="admin-card">
+              <p style={{ color: 'var(--muted-foreground)' }}>No sections found for this template.</p>
             </div>
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="admin-card ws-list" style={{ padding: '0.5rem 0' }}>
+              {items.map((s, i) => (
+                <div
+                  key={s.templateSectionId}
+                  className={`ws-row${s.isFixed ? ' is-fixed' : ''}${s.isEnabled === false ? ' is-disabled' : ''}`}
+                  draggable={!s.isFixed}
+                  onDragStart={() => onDragStart(i)}
+                  onDragOver={onDragOver}
+                  onDrop={() => onDrop(i)}
+                  onDragEnd={() => { dragIndex.current = null; }}
+                >
+                  <span className="ws-grip" title={s.isFixed ? 'Fixed sections cannot be moved' : 'Drag to reorder'}>
+                    {s.isFixed ? <Lock size={15} /> : <GripVertical size={16} />}
+                  </span>
 
-      <p style={{ color: 'var(--muted-foreground)', fontSize: '0.8rem', marginTop: '0.75rem' }}>
-        Fixed sections (hero/footer) are locked and always render at their template position. Use
-        <RefreshCw size={12} style={{ verticalAlign: '-2px', margin: '0 0.25rem' }} />
-        Reset defaults to restore the template order.
-      </p>
+                  <div className="ws-main">
+                    <Link to={`/admin/sections/${s.templateSectionId}`} className="ws-name">
+                      {s.displayName || s.sectionKey}
+                    </Link>
+                    <span className="ws-key">{s.sectionKey}</span>
+                    {s.isFixed && <span className="ws-badge">Fixed</span>}
+                    {s.isEnabled === false && <span className="ws-badge is-off">Hidden</span>}
+                  </div>
+
+                  <div className="ws-position">
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => move(i, -1)}
+                      disabled={s.isFixed || i === 0}
+                      title="Move up"
+                      aria-label="Move up"
+                    >
+                      <ArrowUp size={14} />
+                    </button>
+                    <input
+                      type="number"
+                      min={0}
+                      value={s.sortOrder}
+                      disabled={s.isFixed}
+                      onChange={(e) => setPosition(i, e.target.value)}
+                      className="ws-order-input"
+                      aria-label="Position"
+                    />
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => move(i, 1)}
+                      disabled={s.isFixed || i === items.length - 1}
+                      title="Move down"
+                      aria-label="Move down"
+                    >
+                      <ArrowDown size={14} />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={`ws-toggle${s.isEnabled !== false ? ' is-on' : ''}`}
+                    onClick={() => toggleEnabled(i)}
+                    disabled={s.isFixed}
+                    title={s.isFixed ? 'Fixed sections cannot be disabled' : s.isEnabled === false ? 'Enable section' : 'Disable section'}
+                    aria-pressed={s.isEnabled !== false}
+                  >
+                    <span className="ws-toggle-track"><span className="ws-toggle-thumb" /></span>
+                    <span className="ws-toggle-label">
+                      {s.isEnabled === false ? 'Off' : 'On'}
+                    </span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p style={{ color: 'var(--muted-foreground)', fontSize: '0.8rem', marginTop: '0.75rem' }}>
+            Fixed sections (hero/footer) are locked and always render at their template position. Use
+            <RefreshCw size={12} style={{ verticalAlign: '-2px', margin: '0 0.25rem' }} />
+            Reset defaults to restore the template order.
+          </p>
+        </div>
+
+        <aside className="sec-editor-preview">
+          <SitePreview sections={entries} />
+        </aside>
+      </div>
     </div>
   );
 }
