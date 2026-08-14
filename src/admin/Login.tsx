@@ -20,7 +20,7 @@ export function Login({
     setError('');
     setLoading(true);
     try {
-      await signin(emailOrPhone, password);
+      await signin(emailOrPhone.trim(), password);
       const me = await fetchMe();
       if (!me) throw new Error('Could not verify session');
       const sections = await fetchSections();

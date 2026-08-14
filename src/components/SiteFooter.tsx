@@ -3,12 +3,14 @@ import { Mail, MapPin, Phone, Plane, Share2, AtSign } from 'lucide-react';
 import type { WebsiteData } from '../types';
 import { arr, str } from '../types';
 import { BRAND } from '../config';
+import { useI18n } from '../i18n';
 
 interface QuickLink { label: string; url: string }
 interface Social { platform: string; url: string }
 interface DestTitle { title: string }
 
 export function SiteFooter({ data }: { data: WebsiteData | null }) {
+  const { t } = useI18n();
   const footerSection = data?.sections?.find((s) => s.sectionKey === 'footer');
   const contact = data?.sections?.find((s) => s.sectionKey === 'contact');
   const destinations = data?.sections?.find((s) => s.sectionKey === 'destinations');
@@ -57,14 +59,14 @@ export function SiteFooter({ data }: { data: WebsiteData | null }) {
           </div>
 
           <div className="footer-col">
-            <h4>Explore</h4>
+            <h4>{t('footer.explore')}</h4>
             <div className="footer-links">
               {(quickLinks.length ? quickLinks : [
-                { label: 'Home', url: '/' },
-                { label: 'Destinations', url: '/destinations' },
-                { label: 'Packages', url: '/packages' },
-                { label: 'Offers', url: '/offers' },
-                { label: 'Support', url: '/support' },
+                { label: t('nav.home'), url: '/' },
+                { label: t('nav.destinations'), url: '/destinations' },
+                { label: t('nav.packages'), url: '/packages' },
+                { label: t('nav.offers'), url: '/offers' },
+                { label: t('nav.support'), url: '/support' },
               ]).map((l, i) => (
                 <Link key={i} to={l.url || '/'}>{l.label || 'Link'}</Link>
               ))}
@@ -72,7 +74,7 @@ export function SiteFooter({ data }: { data: WebsiteData | null }) {
           </div>
 
           <div className="footer-col">
-            <h4>Destinations</h4>
+            <h4>{t('footer.destinations')}</h4>
             <div className="footer-links">
               {destCards.slice(0, 5).map((d, i) => (
                 <span key={i}>{d.title}</span>
@@ -81,7 +83,7 @@ export function SiteFooter({ data }: { data: WebsiteData | null }) {
           </div>
 
           <div className="footer-col">
-            <h4>Contact</h4>
+            <h4>{t('footer.contact')}</h4>
             <div className="footer-contact-row">
               <MapPin className="icon" size={16} />
               {str(contactContent, 'address', BRAND.address)}
@@ -100,8 +102,8 @@ export function SiteFooter({ data }: { data: WebsiteData | null }) {
         </div>
 
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
-          <span>Crafted with care.</span>
+          <span>© {new Date().getFullYear()} {brandName}. {t('footer.rights')}</span>
+          <span>{t('footer.crafted')}</span>
         </div>
       </div>
     </footer>

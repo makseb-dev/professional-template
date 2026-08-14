@@ -6,6 +6,9 @@ export const BRAND = {
   phoneDisplay: '+212 555 123 456',
   whatsapp: '212555123456',
   address: '12 Boulevard Mohammed V, Casablanca',
+  country: 'Morocco',
+  currency: 'MAD',
+  currencyLocale: 'fr-FR',
 } as const;
 
 export const NAV_LINKS: { to: string; label: string; end?: boolean }[] = [
@@ -14,6 +17,7 @@ export const NAV_LINKS: { to: string; label: string; end?: boolean }[] = [
   { to: '/packages', label: 'Packages' },
   { to: '/offers', label: 'Offers' },
   { to: '/gallery', label: 'Gallery' },
+  { to: '/blog', label: 'Insights' },
   { to: '/about', label: 'About' },
   { to: '/support', label: 'Support' },
 ];

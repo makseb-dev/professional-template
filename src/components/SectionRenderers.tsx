@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import type { SectionContent } from '../types';
 import { arr, num, obj, str } from '../types';
 import { Reveal } from './Reveal';
+import { useI18n } from '../i18n';
+import { getOfferImage, hasFlight, itemSlug, localizeOffer, offerUrlId, type RichOffer } from '../offer';
 import {
-  Building2, Check, ChevronRight, Compass, Mail, MapPin, MessageCircle,
+  Building2, Check, ChevronRight, Clock, Compass, Mail, MapPin, MessageCircle,
   Phone, Plane, Send, ShieldCheck, Sparkles, Star, Users,
 } from 'lucide-react';
 
@@ -16,18 +18,23 @@ function cta(v: unknown): CtaObj {
 
 /* ============================== HERO ============================== */
 export function Hero({ content }: { content: SectionContent }) {
+  const { t } = useI18n();
   const ctaBtn = cta(content.ctaButton);
   const secondary = cta(content.secondaryCTA);
   const bg = str(content, 'backgroundImage');
+  const placement = str(content, 'placement', 'left');
+  const scrollToOffers = () => {
+    document.getElementById('offers')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   return (
-    <section className="hero">
+    <section className={`hero hero-align-${placement}`}>
       {bg && <img className="hero-bg" src={bg} alt="" />}
       <div className="hero-overlay" />
       <div className="container hero-content">
         <div>
           <span className="hero-badge">
             <Sparkles size={14} />
-            {str(content, 'subtitle', 'Curated experiences')}
+            {str(content, 'subtitle', t('hero.badge'))}
           </span>
           <h1 className="hero-title">
             {str(content, 'title', 'Travel beyond boundaries.')}
@@ -40,9 +47,9 @@ export function Hero({ content }: { content: SectionContent }) {
             )}
           </p>
           <div className="hero-cta">
-            <a className="btn btn-primary btn-lg" href={ctaBtn.link}>
+            <button type="button" className="btn btn-primary btn-lg" onClick={scrollToOffers}>
               {ctaBtn.text} <ChevronRight size={18} />
-            </a>
+            </button>
             <a className="btn btn-secondary btn-lg" href={secondary.link}>
               {secondary.text}
             </a>
@@ -56,6 +63,7 @@ export function Hero({ content }: { content: SectionContent }) {
 /* ============================== ABOUT ============================== */
 interface Stat { label: string; value: string }
 export function About({ content }: { content: SectionContent }) {
+  const { t } = useI18n();
   const stats = arr<Stat>(content, 'statistics');
   const image = str(content, 'image');
   return (
@@ -64,18 +72,18 @@ export function About({ content }: { content: SectionContent }) {
         <div className="grid" style={{ gridTemplateColumns: '1.1fr 1fr', alignItems: 'center', gap: '3rem' }}>
           <div>
             <Reveal>
-              <span className="eyebrow">About us</span>
+              <span className="eyebrow">{t('eyebrow.about')}</span>
               <h2 className="section-title">{str(content, 'heading', 'Crafted for the Modern Explorer')}</h2>
               <p className="section-lead">{str(content, 'content')}</p>
             </Reveal>
             <Reveal delay={120}>
               <div className="grid grid-2" style={{ gap: '1rem', marginTop: '1.5rem' }}>
                 <div className="card" style={{ padding: '1.25rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', color: 'var(--secondary)' }}>Mission</h3>
+                  <h3 style={{ fontSize: '0.95rem', color: 'var(--secondary)' }}>{t('about.mission')}</h3>
                   <p className="card-text">{str(content, 'mission')}</p>
                 </div>
                 <div className="card" style={{ padding: '1.25rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', color: 'var(--secondary)' }}>Vision</h3>
+                  <h3 style={{ fontSize: '0.95rem', color: 'var(--secondary)' }}>{t('about.vision')}</h3>
                   <p className="card-text">{str(content, 'vision')}</p>
                 </div>
               </div>
@@ -118,13 +126,14 @@ function ServiceIcon({ icon }: { icon: string }) {
 
 interface ServiceItem { title: string; icon: string; description: string }
 export function Services({ content }: { content: SectionContent }) {
+  const { t } = useI18n();
   const items = arr<ServiceItem>(content, 'items');
   if (items.length === 0) return null;
   return (
     <section className="section section-alt">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">What we do</span>
+          <span className="eyebrow">{t('eyebrow.services')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Our Services')}</h2>
         </Reveal>
         <div className="grid grid-4">
@@ -146,11 +155,15 @@ export function Services({ content }: { content: SectionContent }) {
 }
 
 /* ============================== DESTINATIONS ============================== */
-interface DestCard { title: string; image: string; shortDescription: string; price: string }
+export interface DestCard { title: string; image: string; shortDescription: string; price: string }
 export function DestinationCard({ card, delay = 0 }: { card: DestCard; delay?: number }) {
   return (
     <Reveal delay={delay}>
-      <div className="card card-hover" style={{ height: '100%' }}>
+      <Link
+        className="card card-hover card-link"
+        style={{ height: '100%', display: 'block' }}
+        to={`/destinations/${itemSlug(card, str(card, 'title'))}`}
+      >
         <div className="card-media">
           {str(card, 'image') && <img src={str(card, 'image')} alt={str(card, 'title')} loading="lazy" />}
         </div>
@@ -158,8 +171,9 @@ export function DestinationCard({ card, delay = 0 }: { card: DestCard; delay?: n
           <h3 className="card-title">{str(card, 'title')}</h3>
           <p className="card-text">{str(card, 'shortDescription')}</p>
           <strong className="price" style={{ color: 'var(--secondary)' }}>{str(card, 'price')}</strong>
+          <span className="card-arrow"><ChevronRight size={16} /></span>
         </div>
-      </div>
+      </Link>
     </Reveal>
   );
 }
@@ -171,13 +185,14 @@ export function Destinations({
   content: SectionContent;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const cards = arr<DestCard>(content, 'cards').slice(0, featured ? 6 : undefined);
   if (cards.length === 0) return null;
   return (
     <section className="section">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">Featured destinations</span>
+          <span className="eyebrow">{t('eyebrow.destinations')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Destinations')}</h2>
         </Reveal>
         <div className="grid grid-3">
@@ -189,7 +204,7 @@ export function Destinations({
 }
 
 /* ============================== PACKAGES ============================== */
-interface PkgItem {
+export interface PkgItem {
   title: string; destination: string; duration: string; price: string;
   rating: number; image: string; features: string[];
 }
@@ -197,7 +212,11 @@ export function PackageCard({ item, delay = 0 }: { item: PkgItem; delay?: number
   const features = Array.isArray(item.features) ? item.features : [];
   return (
     <Reveal delay={delay}>
-      <div className="card card-hover" style={{ height: '100%' }}>
+      <Link
+        className="card card-hover card-link"
+        style={{ height: '100%', display: 'block' }}
+        to={`/packages/${itemSlug(item, str(item, 'title'))}`}
+      >
         <div className="card-media">
           {str(item, 'image') && <img src={str(item, 'image')} alt={str(item, 'title')} loading="lazy" />}
           <span className="badge badge-discount"><Star size={12} fill="currentColor" /> {num(item, 'rating', 0).toFixed(1)}</span>
@@ -211,8 +230,9 @@ export function PackageCard({ item, delay = 0 }: { item: PkgItem; delay?: number
               <li key={j}><Check className="check" size={14} /> {f}</li>
             ))}
           </ul>
+          <span className="card-arrow"><ChevronRight size={16} /></span>
         </div>
-      </div>
+      </Link>
     </Reveal>
   );
 }
@@ -224,13 +244,14 @@ export function Packages({
   content: SectionContent;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const items = arr<PkgItem>(content, 'items').slice(0, featured ? 3 : undefined);
   if (items.length === 0) return null;
   return (
     <section className="section section-alt">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">Curated journeys</span>
+          <span className="eyebrow">{t('eyebrow.packages')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Popular Packages')}</h2>
           {featured && (
             <Link to="/packages" className="btn btn-secondary" style={{ marginTop: '0.75rem' }}>
@@ -247,11 +268,11 @@ export function Packages({
 }
 
 /* ============================== OFFERS ============================== */
-interface OfferItem {
+export interface OfferItem {
   id: string; title: string; subtitle: string; imageUrl: string;
   discountPercentage: number; validFrom?: string; validTo: string; ctaLink: string;
 }
-function isOfferActive(offer: OfferItem): boolean {
+export function isOfferActive(offer: OfferItem): boolean {
   const validTo = str(offer, 'validTo');
   if (!validTo) return true;
   const end = new Date(validTo);
@@ -259,28 +280,59 @@ function isOfferActive(offer: OfferItem): boolean {
   return end.getTime() >= Date.now();
 }
 
-export function OfferCard({ offer, delay = 0 }: { offer: OfferItem; delay?: number }) {
-  const discount = num(offer, 'discountPercentage', 0);
+export function OfferCard({ offer, delay = 0 }: { offer: RichOffer | OfferItem; delay?: number }) {
+  const { t, locale } = useI18n();
+  const o = localizeOffer(offer, locale);
+  const discount = num(o, 'discountPercentage', 0);
+  const days = num(o, 'durationDays', 0);
+  const nights = num(o, 'durationNights', 0);
+  const price = num(o, 'priceFrom', 0);
+  const rating = num(o, 'rating', 0);
+  const reviews = num(o, 'reviewsCount', 0);
+  const image = getOfferImage(o);
   return (
     <Reveal delay={delay}>
-      <div className="card card-hover" style={{ height: '100%' }}>
-        <div className="card-media">
-          {str(offer, 'imageUrl') && <img src={str(offer, 'imageUrl')} alt={str(offer, 'title')} loading="lazy" />}
-          {discount > 0 && <span className="badge badge-discount" style={{ background: 'var(--secondary)' }}>−{discount}%</span>}
-        </div>
-        <div className="card-body">
-          <h3 className="card-title">{str(offer, 'title')}</h3>
-          <p className="card-text">{str(offer, 'subtitle')}</p>
-          {str(offer, 'validTo') && (
-            <p className="card-meta" style={{ marginTop: '0.6rem' }}>
-              Valid until {new Date(str(offer, 'validTo')).toLocaleDateString()}
-            </p>
+      <Link className="offer-card" style={{ height: '100%' }} to={`/offers/${offerUrlId(o)}`}>
+        <div className="offer-media">
+          {image && <img src={image} alt={str(o, 'title')} loading="lazy" />}
+          <div className="offer-media-overlay" />
+          {discount > 0 && <span className="badge badge-discount">−{discount}%</span>}
+          {hasFlight(o) && (
+            <span className="offer-flight-badge"><Plane size={13} /> {t('detail.flight')}</span>
           )}
-          <a className="btn btn-secondary" style={{ marginTop: '0.75rem' }} href={str(offer, 'ctaLink', '#')}>
-            View offer <ChevronRight size={16} />
-          </a>
+          {str(o, 'validTo') && (
+            <span className="offer-valid">
+              {t('common.validUntil')} {new Date(str(o, 'validTo')).toLocaleDateString(locale)}
+            </span>
+          )}
         </div>
-      </div>
+        <div className="offer-body">
+          <div className="offer-chips">
+            {str(o, 'countryFlag') && (
+              <span className="offer-chip">{str(o, 'countryFlag')} {str(o, 'country')}</span>
+            )}
+            {days > 0 && (
+              <span className="offer-chip"><Clock size={12} /> {days} {t('detail.days')}{nights > 0 ? ` / ${nights} ${t('detail.nights')}` : ''}</span>
+            )}
+          </div>
+          <h3 className="offer-title">{str(o, 'title')}</h3>
+          <p className="offer-sub">{str(o, 'tagline') || str(o, 'subtitle')}</p>
+          {rating > 0 && (
+            <div className="offer-rating">
+              <Star size={13} fill="var(--secondary)" color="var(--secondary)" />
+              <strong>{rating.toFixed(1)}</strong>
+              <span>{reviews > 0 ? `${reviews} ${t('detail.reviews')}` : t('common.topRated')}</span>
+            </div>
+          )}
+          <div className="offer-foot">
+            <div className="offer-price-wrap">
+              <span className="offer-from">{t('detail.from')}</span>
+              <span className="offer-price">{t('detail.price')}{' '}{price.toLocaleString(locale)} <small>{str(o, 'currency', 'DZD')}</small></span>
+            </div>
+            <span className="btn btn-primary offer-cta">{t('detail.book')} <ChevronRight size={16} /></span>
+          </div>
+        </div>
+      </Link>
     </Reveal>
   );
 }
@@ -292,19 +344,20 @@ export function Offers({
   content: SectionContent;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const items = arr<OfferItem>(content, 'items').filter(isOfferActive);
   if (items.length === 0) return null;
   const shown = featured ? items.slice(0, 3) : items;
   return (
-    <section className="section">
+    <section className="section" id="offers">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">Limited time</span>
+          <span className="eyebrow">{t('eyebrow.offers')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Special Offers')}</h2>
           <p className="section-lead">{str(content, 'description')}</p>
           {featured && (
             <Link to="/offers" className="btn btn-secondary" style={{ marginTop: '0.75rem' }}>
-              View all offers <ChevronRight size={16} />
+              {t('common.viewAll')} <ChevronRight size={16} />
             </Link>
           )}
         </Reveal>
@@ -324,17 +377,18 @@ export function Gallery({
   content: SectionContent;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const images = arr<string>(content, 'images').slice(0, featured ? 6 : undefined);
   if (images.length === 0) return null;
   return (
     <section className="section section-alt">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">Moments</span>
+          <span className="eyebrow">{t('eyebrow.gallery')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Travel Gallery')}</h2>
           {featured && (
             <Link to="/gallery" className="btn btn-secondary" style={{ marginTop: '0.75rem' }}>
-              View full gallery <ChevronRight size={16} />
+              {t('common.viewAll')} <ChevronRight size={16} />
             </Link>
           )}
         </Reveal>
@@ -376,17 +430,18 @@ export function TestimonialCard({ t, delay = 0 }: { t: Testimonial; delay?: numb
 }
 
 export function Testimonials({ content }: { content: SectionContent }) {
+  const { t } = useI18n();
   const items = arr<Testimonial>(content, 'items');
   if (items.length === 0) return null;
   return (
     <section className="section">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">Testimonials</span>
+          <span className="eyebrow">{t('eyebrow.testimonials')}</span>
           <h2 className="section-title">{str(content, 'heading', 'What Our Clients Say')}</h2>
         </Reveal>
         <div className="grid grid-3">
-          {items.map((t, i) => <TestimonialCard key={i} t={t} delay={i * 80} />)}
+          {items.map((tm, i) => <TestimonialCard key={i} t={tm} delay={i * 80} />)}
         </div>
       </div>
     </section>
@@ -415,17 +470,18 @@ export function Faq({
   content: SectionContent;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const items = arr<FaqItem>(content, 'items').slice(0, featured ? 4 : undefined);
   if (items.length === 0) return null;
   return (
     <section className="section section-alt">
       <div className="container" style={{ maxWidth: 760 }}>
         <Reveal className="section-header-center">
-          <span className="eyebrow">FAQ</span>
+          <span className="eyebrow">{t('eyebrow.faq')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Frequently Asked Questions')}</h2>
           {featured && (
             <Link to="/support" className="btn btn-secondary" style={{ marginTop: '0.75rem' }}>
-              See all questions <ChevronRight size={16} />
+              {t('common.viewAll')} <ChevronRight size={16} />
             </Link>
           )}
         </Reveal>
@@ -438,11 +494,15 @@ export function Faq({
 }
 
 /* ============================== BLOG ============================== */
-interface BlogItem { title: string; cover: string; author: string; content: string; date: string }
+export interface BlogItem { title: string; cover: string; author: string; content: string; date: string }
 export function BlogCard({ b, delay = 0 }: { b: BlogItem; delay?: number }) {
   return (
     <Reveal delay={delay}>
-      <article className="card card-hover" style={{ height: '100%' }}>
+      <Link
+        className="card card-hover card-link"
+        style={{ height: '100%', display: 'block' }}
+        to={`/blog/${itemSlug(b, str(b, 'title'))}`}
+      >
         <div className="card-media">
           {str(b, 'cover') && <img src={str(b, 'cover')} alt={str(b, 'title')} loading="lazy" />}
         </div>
@@ -450,8 +510,9 @@ export function BlogCard({ b, delay = 0 }: { b: BlogItem; delay?: number }) {
           <p className="card-meta">{str(b, 'date')} · {str(b, 'author')}</p>
           <h3 className="card-title">{str(b, 'title')}</h3>
           <p className="card-text">{str(b, 'content')}</p>
+          <span className="card-arrow"><ChevronRight size={16} /></span>
         </div>
-      </article>
+      </Link>
     </Reveal>
   );
 }
@@ -463,13 +524,14 @@ export function Blog({
   content: SectionContent;
   featured?: boolean;
 }) {
+  const { t } = useI18n();
   const items = arr<BlogItem>(content, 'items').slice(0, featured ? 3 : undefined);
   if (items.length === 0) return null;
   return (
     <section className="section">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">Journal</span>
+          <span className="eyebrow">{t('eyebrow.blog')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Travel Insights')}</h2>
         </Reveal>
         <div className="grid grid-3">
@@ -489,15 +551,16 @@ export function Contact({
   content: SectionContent;
   compact?: boolean;
 }) {
+  const { t } = useI18n();
   const contactForm = obj(content, 'contactForm');
   const fields = arr<FormField>(contactForm, 'fields');
-  const submitText = str(contactForm, 'submitButtonText', 'Send Message');
+  const submitText = str(contactForm, 'submitButtonText', t('contact.submit'));
 
   const cards = [
-    { icon: <Phone size={20} />, label: 'Call', value: str(content, 'phone'), href: `tel:${str(content, 'phone')}` },
-    { icon: <MessageCircle size={20} />, label: 'WhatsApp', value: str(content, 'whatsapp'), href: `https://wa.me/${str(content, 'whatsapp').replace(/\s/g, '')}` },
-    { icon: <Mail size={20} />, label: 'Email', value: str(content, 'email'), href: `mailto:${str(content, 'email')}` },
-    { icon: <MapPin size={20} />, label: 'Office', value: str(content, 'address'), href: '' },
+    { icon: <Phone size={20} />, label: t('contact.call'), value: str(content, 'phone'), href: `tel:${str(content, 'phone')}` },
+    { icon: <MessageCircle size={20} />, label: t('contact.whatsapp'), value: str(content, 'whatsapp'), href: `https://wa.me/${str(content, 'whatsapp').replace(/\s/g, '')}` },
+    { icon: <Mail size={20} />, label: t('contact.email'), value: str(content, 'email'), href: `mailto:${str(content, 'email')}` },
+    { icon: <MapPin size={20} />, label: t('contact.office'), value: str(content, 'address'), href: '' },
   ];
 
   const showMap = !compact && str(content, 'googleMap');
@@ -506,55 +569,59 @@ export function Contact({
     <section className="section">
       <div className="container">
         <Reveal className="section-header-center">
-          <span className="eyebrow">Contact</span>
+          <span className="eyebrow">{t('eyebrow.contact')}</span>
           <h2 className="section-title">{str(content, 'heading', 'Get In Touch')}</h2>
         </Reveal>
         <div className="grid" style={{ gridTemplateColumns: compact ? '1fr' : '1fr 1fr', alignItems: 'start', gap: '2rem' }}>
-          <div>
-            <div className="contact-cards">
-              {cards.map((c, i) => (
-                <a key={i} className="contact-card" href={c.href || undefined} style={c.href ? {} : { pointerEvents: 'none' }}>
-                  <div className="contact-icon">{c.icon}</div>
-                  <div>
-                    <div className="stat-label">{c.label}</div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{c.value || '—'}</div>
-                  </div>
-                </a>
-              ))}
+          <Reveal>
+            <div>
+              <div className="contact-cards">
+                {cards.map((c, i) => (
+                  <a key={i} className="contact-card" href={c.href || undefined} style={c.href ? {} : { pointerEvents: 'none' }}>
+                    <div className="contact-icon">{c.icon}</div>
+                    <div>
+                      <div className="stat-label">{c.label}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{c.value || '—'}</div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+              {showMap && (
+                <iframe
+                  title="map"
+                  src={showMap}
+                  style={{ width: '100%', border: 0, minHeight: 260, borderRadius: 'var(--radius)', marginTop: '1rem' }}
+                  loading="lazy"
+                />
+              )}
             </div>
-            {showMap && (
-              <iframe
-                title="map"
-                src={showMap}
-                style={{ width: '100%', border: 0, minHeight: 260, borderRadius: 'var(--radius)', marginTop: '1rem' }}
-                loading="lazy"
-              />
-            )}
-          </div>
+          </Reveal>
 
-          <div className="form-panel">
-            <h3 style={{ fontSize: '1.35rem', marginBottom: '0.25rem' }}>Send us a message</h3>
-            <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '1.25rem' }}>
-              We usually reply within 24 hours.
-            </p>
-            <form onSubmit={(e) => { e.preventDefault(); }}>
-              {(fields.length ? fields : [
-                { name: 'name', type: 'text', placeholder: 'Your Name', required: true },
-                { name: 'email', type: 'email', placeholder: 'Your Email', required: true },
-                { name: 'message', type: 'textarea', placeholder: 'Tell us about your dream trip', required: true },
-              ]).map((f, i) => (
-                <div className="field" key={f.name || i}>
-                  <label htmlFor={`field-${f.name || i}`}>{f.placeholder}</label>
-                  {f.type === 'textarea' ? (
-                    <textarea id={`field-${f.name || i}`} placeholder={f.placeholder} required={!!f.required} rows={5} />
-                  ) : (
-                    <input id={`field-${f.name || i}`} type={f.type === 'email' ? 'email' : 'text'} placeholder={f.placeholder} required={!!f.required} />
-                  )}
-                </div>
-              ))}
-              <button className="btn btn-primary" type="submit">{submitText} <Send size={16} /></button>
-            </form>
-          </div>
+          <Reveal delay={140}>
+            <div className="form-panel">
+              <h3 style={{ fontSize: '1.35rem', marginBottom: '0.25rem' }}>{t('contact.formTitle')}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '1.25rem' }}>
+                {t('contact.formSub')}
+              </p>
+              <form onSubmit={(e) => { e.preventDefault(); }}>
+                {(fields.length ? fields : [
+                  { name: 'name', type: 'text', placeholder: t('contact.ph.name'), required: true },
+                  { name: 'email', type: 'email', placeholder: t('contact.ph.email'), required: true },
+                  { name: 'message', type: 'textarea', placeholder: t('contact.ph.message'), required: true },
+                ]).map((f, i) => (
+                  <div className="field" key={f.name || i}>
+                    <label htmlFor={`field-${f.name || i}`}>{f.placeholder}</label>
+                    {f.type === 'textarea' ? (
+                      <textarea id={`field-${f.name || i}`} placeholder={f.placeholder} required={!!f.required} rows={5} />
+                    ) : (
+                      <input id={`field-${f.name || i}`} type={f.type === 'email' ? 'email' : 'text'} placeholder={f.placeholder} required={!!f.required} />
+                    )}
+                  </div>
+                ))}
+                <button className="btn btn-primary" type="submit">{submitText} <Send size={16} /></button>
+              </form>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>

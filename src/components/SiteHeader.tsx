@@ -1,14 +1,27 @@
 import { Link, NavLink } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Moon, Plane, Sun, X } from 'lucide-react';
+import { Globe, Moon, Plane, Sun, X } from 'lucide-react';
 import type { WebsiteData } from '../types';
 import { BRAND, NAV_LINKS } from '../config';
 import { useTheme } from '../hooks/useTheme';
+import { useI18n } from '../i18n';
+
+const NAV_KEY: Record<string, string> = {
+  '/': 'nav.home',
+  '/destinations': 'nav.destinations',
+  '/packages': 'nav.packages',
+  '/offers': 'nav.offers',
+  '/gallery': 'nav.gallery',
+  '/blog': 'nav.blog',
+  '/about': 'nav.about',
+  '/support': 'nav.support',
+};
 
 export function SiteHeader({ data }: { data: WebsiteData | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme, toggle } = useTheme();
+  const { t, locale, setLocale } = useI18n();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -26,6 +39,7 @@ export function SiteHeader({ data }: { data: WebsiteData | null }) {
   }, [menuOpen]);
 
   const brandName = data?.agency?.name || BRAND.name;
+  const switchLocale = () => setLocale(locale === 'fr' ? 'en' : 'fr');
 
   return (
     <header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
@@ -48,12 +62,20 @@ export function SiteHeader({ data }: { data: WebsiteData | null }) {
               end={n.end}
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             >
-              {n.label}
+              {t(NAV_KEY[n.to] ?? n.label)}
             </NavLink>
           ))}
         </nav>
 
         <div className="header-actions">
+          <button
+            className="lang-switch"
+            aria-label="Switch language"
+            onClick={switchLocale}
+          >
+            <Globe size={16} style={{ color: 'var(--primary)' }} />
+            {locale.toUpperCase()}
+          </button>
           <button
             className="icon-btn"
             aria-label="Toggle dark mode"
@@ -66,7 +88,7 @@ export function SiteHeader({ data }: { data: WebsiteData | null }) {
             className="btn btn-primary"
             style={{ padding: '0.6rem 1.2rem' }}
           >
-            Book Now
+            {t('detail.bookNow')}
           </Link>
           <button
             className="menu-btn"
@@ -89,9 +111,15 @@ export function SiteHeader({ data }: { data: WebsiteData | null }) {
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={() => setMenuOpen(false)}
             >
-              {n.label}
+              {t(NAV_KEY[n.to] ?? n.label)}
             </NavLink>
           ))}
+          <button
+            className="lang-switch"
+            onClick={switchLocale}
+          >
+            <Globe size={16} /> {locale === 'fr' ? 'EN' : 'FR'}
+          </button>
           <button
             className="icon-btn"
             style={{ alignSelf: 'flex-start' }}

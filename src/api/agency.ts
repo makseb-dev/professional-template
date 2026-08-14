@@ -53,4 +53,27 @@ export async function saveSectionContent(
   content: SectionContent,
 ): Promise<void> {
   await api.patch(`/agency/sections/${templateSectionId}`, { content });
+  resetWebsiteCache();
+}
+
+export interface SectionOrderItem {
+  templateSectionId: string;
+  sortOrder: number;
+  isEnabled?: boolean;
+}
+
+export async function reorderSections(
+  items: SectionOrderItem[],
+): Promise<AdminSection[]> {
+  const list = await api.patch<AdminSection[]>('/agency/sections/order', {
+    items,
+  });
+  resetWebsiteCache();
+  return list;
+}
+
+export async function resetSectionsOrder(): Promise<AdminSection[]> {
+  const list = await api.post<AdminSection[]>('/agency/sections/reset-order', {});
+  resetWebsiteCache();
+  return list;
 }

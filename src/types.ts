@@ -37,9 +37,10 @@ export interface AdminSection {
 }
 
 export interface FieldSchema {
-  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'json';
   required: boolean;
   description?: string;
+  options?: string[];
   fields?: Record<string, FieldSchema>;
   itemShape?: Record<string, FieldSchema>;
   arrayItemType?: 'string' | 'number';

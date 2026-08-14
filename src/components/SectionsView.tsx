@@ -29,6 +29,7 @@ export function renderPageSections(
   const keys = PAGE_SECTIONS[page] ?? PAGE_SECTIONS['/'];
   return sections
     .filter((s) => isEnabled(s) && keys.includes(s.sectionKey))
+    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
     .map((s) => renderSection(s))
     .filter((n): n is ReactNode => n !== null);
 }
