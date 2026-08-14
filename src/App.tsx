@@ -11,6 +11,7 @@ import { PackageDetail } from './pages/PackageDetail';
 import { DestinationDetail } from './pages/DestinationDetail';
 import { BlogDetail } from './pages/BlogDetail';
 import { NotFound } from './pages/NotFound';
+import { PreviewWindow } from './pages/PreviewWindow';
 import { AdminLayout } from './admin/AdminLayout';
 import { Overview } from './admin/Overview';
 import { SectionEditor } from './admin/SectionEditor';
@@ -93,6 +94,7 @@ export default function App() {
       <Route path="/blog" element={publicRoute(<BlogPage data={data} />)} />
       <Route path="/blog/:slug" element={publicRoute(<BlogDetailRoute data={data} />)} />
       <Route path="/support" element={publicRoute(<SupportPage data={data} />)} />
+      <Route path="/preview" element={<PreviewWindow />} />
       <Route path="/404" element={publicRoute(<NotFound />)} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Overview />} />

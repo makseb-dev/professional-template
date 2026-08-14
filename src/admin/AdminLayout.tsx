@@ -83,6 +83,8 @@ export function AdminLayout() {
 
   const toggleCollapsed = () => setCollapsed((c) => !c);
 
+  const closeSidebar = () => setCollapsed(true);
+
   const editable = filterEditable(sections ?? []);
 
   const isActive = (to: string) =>
@@ -138,6 +140,7 @@ export function AdminLayout() {
             className={navClass('/admin')}
             title={collapsed ? 'Overview' : undefined}
             aria-current={isActive('/admin') ? 'page' : undefined}
+            onClick={closeSidebar}
           >
             <LayoutDashboard size={16} />
             <span className="nav-link-text">Overview</span>
@@ -147,6 +150,7 @@ export function AdminLayout() {
             className={navClass('/admin/offers')}
             title={collapsed ? 'Offers quick edit' : undefined}
             aria-current={isActive('/admin/offers') ? 'page' : undefined}
+            onClick={closeSidebar}
           >
             <BadgePercent size={16} />
             <span className="nav-link-text">Offers quick edit</span>
@@ -156,6 +160,7 @@ export function AdminLayout() {
             className={navClass('/admin/website-sections')}
             title={collapsed ? 'Website sections' : undefined}
             aria-current={isActive('/admin/website-sections') ? 'page' : undefined}
+            onClick={closeSidebar}
           >
             <LayoutPanelTop size={16} />
             <span className="nav-link-text">Website sections</span>
@@ -172,6 +177,7 @@ export function AdminLayout() {
                 className={navClass(`/admin/sections/${s.templateSectionId}`)}
                 title={collapsed ? (s.displayName || s.sectionKey) : undefined}
                 aria-current={isActive(`/admin/sections/${s.templateSectionId}`) ? 'page' : undefined}
+                onClick={closeSidebar}
               >
                 <Icon size={16} />
                 <span className="nav-link-text">{s.displayName || s.sectionKey}</span>

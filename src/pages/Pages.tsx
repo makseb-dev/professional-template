@@ -1,9 +1,10 @@
 import type { WebsiteData } from '../types';
 import { arr, num, str } from '../types';
-import { renderPageSections, getSectionContent, PageHero } from '../components/SectionsView';
+import { renderPageSections, renderHomeSections, getSectionContent, PageHero } from '../components/SectionsView';
 import {
-  About, Blog, BlogCard, Contact, Destinations, Faq, Gallery, Hero,
-  OfferCard, Offers, Packages, Services, Testimonials, isOfferActive,
+  BlogCard,
+  OfferCard,
+  isOfferActive,
   type BlogItem,
 } from '../components/SectionRenderers';
 import { Reveal } from '../components/Reveal';
@@ -25,34 +26,7 @@ export function PageView({
 
 export function Home({ data }: { data: WebsiteData | null }) {
   const sections = data?.sections ?? [];
-  const byKey = (key: string) => getSectionContent(sections, key);
-  const hero = byKey('hero');
-  const about = byKey('about');
-  const services = byKey('services');
-  const destinations = byKey('destinations');
-  const packages = byKey('packages');
-  const offers = byKey('offers');
-  const gallery = byKey('gallery');
-  const testimonials = byKey('testimonials');
-  const faq = byKey('faq');
-  const blog = byKey('blog');
-  const contact = byKey('contact');
-
-  return (
-    <>
-      {hero && <Hero content={hero.content} />}
-      {about && <About content={about.content} />}
-      {services && <Services content={services.content} />}
-      {destinations && <Destinations content={destinations.content} featured />}
-      {packages && <Packages content={packages.content} featured />}
-      {offers && <Offers content={offers.content} featured />}
-      {gallery && <Gallery content={gallery.content} featured />}
-      {testimonials && <Testimonials content={testimonials.content} />}
-      {faq && <Faq content={faq.content} featured />}
-      {blog && <Blog content={blog.content} featured />}
-      {contact && <Contact content={contact.content} compact />}
-    </>
-  );
+  return <>{renderHomeSections(sections)}</>;
 }
 
 export function AboutPage({ data }: { data: WebsiteData | null }) {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { ExternalLink, Monitor, RefreshCw } from 'lucide-react';
 import { SECTION_RENDERERS } from '../components/SectionRenderers';
 
@@ -21,11 +21,17 @@ export function PreviewPane({
   content,
   label,
   stageRef,
+  externalHref,
+  select,
+  children,
 }: {
   sectionKey: string;
-  content: Record<string, unknown>;
+  content?: Record<string, unknown>;
   label?: string;
   stageRef?: Ref<HTMLDivElement>;
+  externalHref?: string | null;
+  select?: ReactNode;
+  children?: ReactNode;
 }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +59,7 @@ export function PreviewPane({
   }, [sectionKey, nonce]);
 
   const Renderer = SECTION_RENDERERS[sectionKey];
-  const routeTo = ROUTE_BY_SECTION[sectionKey];
+  const routeTo = externalHref !== undefined ? externalHref : ROUTE_BY_SECTION[sectionKey];
 
   return (
     <div className="preview-pane">
@@ -62,6 +68,7 @@ export function PreviewPane({
           <Monitor size={15} /> {label ?? sectionKey}
         </span>
         <div className="preview-pane-actions">
+          {select}
           <button
             type="button"
             className="icon-btn"
@@ -97,13 +104,13 @@ export function PreviewPane({
               className="preview-canvas-inner"
               style={{ width: DESIGN_WIDTH }}
             >
-              {Renderer ? (
-                <Renderer content={content} />
+              {children ?? (Renderer ? (
+                <Renderer content={content ?? {}} />
               ) : (
                 <div className="preview-empty">
                   No live preview available for “{sectionKey}”.
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
